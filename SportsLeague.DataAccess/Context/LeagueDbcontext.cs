@@ -24,6 +24,7 @@ public class LeagueDbContext : DbContext
     public DbSet<MatchResult> MatchResults => Set<MatchResult>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<Card> Cards => Set<Card>();
+    public DbSet<MatchLineup> MatchLineups => Set<MatchLineup>();
 
 
 
@@ -206,6 +207,28 @@ public class LeagueDbContext : DbContext
                 entity.Property(mr => mr.Observations).HasMaxLength(500);
                 entity.Property(mr => mr.CreatedAt).IsRequired();
                 entity.Property(mr => mr.UpdatedAt).IsRequired(false);
+
+                // ── MatchLineup Configuration ──
+                modelBuilder.Entity<MatchLineup>(entity =>
+                {
+                    entity.HasKey(ml => ml.Id);
+
+                    entity.Property(ml => ml.Position)
+                        .HasMaxLength(10);
+
+                    entity.HasOne(ml => ml.Match)
+                        .WithMany(m => m.MatchLineups)
+                        .HasForeignKey(ml => ml.MatchId)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    entity.HasOne(ml => ml.Player)
+                        .WithMany()
+                        .HasForeignKey(ml => ml.PlayerId)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    entity.HasIndex(ml => new { ml.MatchId, ml.PlayerId })
+                        .IsUnique();
+                });
 
                 // Relación 1:1 con Match
                 entity.HasOne(mr => mr.Match)
